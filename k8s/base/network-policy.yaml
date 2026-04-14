@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ctxpod-workspace-isolation
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: ctxpod-workspace
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ctxpod-control-server
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: ctxpod-control-server
+  - to:
+    - dns: # Allow DNS
+        - hostname: kube-dns.kube-system.svc.cluster.local

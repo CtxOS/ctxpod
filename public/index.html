@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CtxPod | AI Agent Control Center</title>
+    <meta name="description" content="Production-grade AI-powered cloud IDE platform with autonomous agents.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon"></div>
+                <h1>CtxPod</h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" id="nav-dashboard">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-workspaces">
+                    <span class="icon">🏗️</span>
+                    <span>Workspaces</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-jobs">
+                    <span class="icon">🤖</span>
+                    <span>AI Jobs</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-settings">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">JS</div>
+                    <div class="user-info">
+                        <p class="user-name">John Smith</p>
+                        <p class="user-status">Online</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-container">
+                    <input type="text" placeholder="Search tasks, jobs, or files..." id="global-search">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-primary" id="btn-new-workspace">
+                        <span class="icon">+</span> New Workspace
+                    </button>
+                    <div class="notification-bell">
+                        🔔<span class="badge">2</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Status Cards -->
+                <section class="status-cards">
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <h3>Active Workspaces</h3>
+                            <span class="stat-icon ws-icon"></span>
+                        </div>
+                        <div class="stat-value" id="stat-active-ws">0</div>
+                        <div class="stat-footer">
+                            <span class="trend neutral">0% from last week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <h3>Total AI Jobs</h3>
+                            <span class="stat-icon ai-icon"></span>
+                        </div>
+                        <div class="stat-value" id="stat-total-jobs">0</div>
+                        <div class="stat-footer">
+                            <span class="trend up">+12% from last week</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <h3>Node Health</h3>
+                            <span class="stat-icon health-icon"></span>
+                        </div>
+                        <div class="stat-value" id="stat-health">Healthy</div>
+                        <div class="stat-footer">
+                            <span class="pulse"></span> Active
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Active Workspaces -->
+                <section class="card content-card workspaces-section">
+                    <div class="section-header">
+                        <h2>Active Workspaces</h2>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="workspace-list" id="workspace-list">
+                        <!-- Workspaces will be injected here -->
+                        <div class="empty-state">
+                            <p>No active workspaces</p>
+                            <button class="btn btn-secondary btn-sm" onclick="createNewWorkspace()">Create Now</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent AI Tasks -->
+                <section class="card content-card tasks-section">
+                    <div class="section-header">
+                        <h2>Recent AI Tasks</h2>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="job-list" id="job-list">
+                        <!-- Jobs will be injected here -->
+                        <div class="empty-state">
+                            <p>No jobs running</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Live Logs / Real-time Console -->
+                <section class="card terminal-card" id="terminal-section">
+                    <div class="terminal-header">
+                        <div class="terminal-tabs">
+                            <button class="tab active">Orchestrator Logs</button>
+                            <button class="tab">System</button>
+                        </div>
+                        <div class="terminal-actions">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                    </div>
+                    <div class="terminal-body" id="xterm-container" style="height: 300px; padding: 10px;"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-workspace">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>New Workspace</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-new-workspace">
+                    <div class="form-group">
+                        <label>Workspace Name</label>
+                        <input type="text" placeholder="e.g. My Express App" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Template</label>
+                        <select>
+                            <option value="node">Node.js / Express</option>
+                            <option value="react">React / Vite</option>
+                            <option value="python">Python / Flask</option>
+                            <option value="empty" selected>Empty Workspace</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Launch Environment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

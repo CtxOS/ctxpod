@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="vscode-view">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { padding: 12px; background: transparent; }
+        .sidebar-view { display: flex; flex-direction: column; gap: 16px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        textarea { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        .job-logs-mini {
+            background: #010409;
+            border: 1px solid var(--border-color);
+            height: 200px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 8px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-view">
+        <header>
+            <h2 style="font-size: 16px;">CtxPod AI Agent</h2>
+        </header>
+
+        <div class="input-group">
+            <label style="font-size: 12px; opacity: 0.7;">What should I build?</label>
+            <textarea id="task-input" placeholder="e.g. Add a login page using JWT..."></textarea>
+            <button class="btn btn-primary btn-block" id="btn-run-task">Run Autonomous Task</button>
+        </div>
+
+        <div class="status-panel" id="status-panel" style="display: none;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                <span style="font-size: 12px;">Active Job: <span id="active-job-id">...</span></span>
+                <span id="active-job-progress" style="color: var(--accent-blue);">0%</span>
+            </div>
+            <div class="job-logs-mini" id="mini-logs">
+                <div class="log-line system">Waiting for task...</div>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3 style="font-size: 13px; margin-bottom: 8px;">Active Context</h3>
+            <div id="workspace-info" style="font-size: 11px; opacity: 0.6;">
+                Connected to: <span id="current-ws-id">Detected via URL</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const btnRun = document.getElementById('btn-run-task');
+        const taskInput = document.getElementById('task-input');
+        const statusPanel = document.getElementById('status-panel');
+        const logs = document.getElementById('mini-logs');
+        const progress = document.getElementById('active-job-progress');
+
+        // Automagically detect workspaceId from URL query param or path
+        const urlParams = new URLSearchParams(window.location.search);
+        let workspaceId = urlParams.get('workspaceId') || window.location.pathname.split('/').pop();
+
+        btnRun.addEventListener('click', async () => {
+            const task = taskInput.value.trim();
+            if (!task) return;
+
+            btnRun.disabled = true;
+            btnRun.textContent = 'Orchestrating...';
+            statusPanel.style.display = 'block';
+            logs.innerHTML = '<div class="log-line system">Initiating agent pipeline...</div>';
+
+            try {
+                const res = await fetch('/ai/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task, workspaceId })
+                });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+
+                document.getElementById('active-job-id').textContent = data.jobId;
+                socket.emit('subscribe', data.jobId);
+                appendLog('Task queued successfully', 'success');
+            } catch (err) {
+                appendLog(err.message, 'error');
+                btnRun.disabled = false;
+            }
+        });
+
+        socket.on('progress', (data) => {
+            progress.textContent = (data.progress || 0) + '%';
+            if (data.message) appendLog(data.message, 'info');
+            if (data.progress === 100) {
+                btnRun.disabled = false;
+                btnRun.textContent = 'Run Autonomous Task';
+                appendLog('All steps completed!', 'success');
+            }
+        });
+
+        function appendLog(message, type = 'system') {
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = message;
+            logs.appendChild(line);
+            logs.scrollTop = logs.scrollHeight;
+        }
+    </script>
+</body>
+</html>

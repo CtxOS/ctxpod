@@ -1,0 +1,34 @@
+# infra/k8s/ray/worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: ray-worker
+  template:
+    metadata:
+      labels:
+        component: ray-worker
+    spec:
+      containers:
+      - name: ray-worker
+        image: rayproject/ray:latest-gpu # Using GPU image for workers
+        command: ["/bin/bash", "-c", "--"]
+        args: ["ray start --address=ray-head:6379 --block"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            cpu: 4
+            memory: 8Gi
+          requests:
+            nvidia.com/gpu: 1
+            cpu: 2
+            memory: 4Gi
+      # Ensure workers run on nodes with GPUs
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"

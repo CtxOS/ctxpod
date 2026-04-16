@@ -1,0 +1,78 @@
+# infra/k8s/crds/aijob.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: aijobs.khulnasoft.ai
+spec:
+  group: khulnasoft.ai
+  names:
+    kind: AIJob
+    plural: aijobs
+    singular: aijob
+    shortNames:
+      - aij
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: ["scanner", "inference", "training", "custom"]
+                resources:
+                  type: object
+                  properties:
+                    gpu:
+                      type: integer
+                    vram_gb:
+                      type: integer
+                    cpu:
+                      type: integer
+                workflow:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      agent:
+                        type: string
+                      params:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                progress:
+                  type: string
+                node:
+                  type: string
+                cost:
+                  type: number
+                startTime:
+                  type: string
+                  format: date-time
+                completionTime:
+                  type: string
+                  format: date-time
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          jsonPath: .status.phase
+        - name: Progress
+          type: string
+          jsonPath: .status.progress
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

@@ -1,0 +1,20 @@
+# infra/k8s/scaling/keda.yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ray-worker-scaler
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: ray-worker # Should match the Deployment name in infra/k8s/ray/worker.yaml
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  cooldownPeriod: 300
+  pollingInterval: 30
+  triggers:
+  - type: redis
+    metadata:
+      address: redis.default.svc.cluster.local:6379 
+      listName: job_queue
+      listLength: "5"
+      activationListLength: "1"

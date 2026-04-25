@@ -37,14 +37,14 @@ class RedisLock:
         """
         r.eval(script, 1, self.lock_name, self.token)
 
-@contextmanager
+`@contextmanager`
 def distributed_lock(name, timeout=5, expire=15):
     lock = RedisLock(name, timeout, expire)
-    if lock.acquire():
-        try:
-            yield
-        finally:
-            lock.release()
-    else:
+    acquired = lock.acquire()
+    if not acquired:
         logger.warning(f"Could not acquire lock: {name}")
-        yield False
+        raise RuntimeError(f"Failed to acquire distributed lock: {name}")
+    try:
+        yield
+    finally:
+        lock.release()

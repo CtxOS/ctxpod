@@ -1,81 +1,71 @@
-# CtxPod - AI-Powered IDE Platform
+# 🚀 KhulnaSoft AI Compute Grid
 
-A Gitpod-like development environment with autonomous AI agents that can plan, code, test, debug, and deploy automatically.
+A production-grade deployment pack for a hybrid GPU cluster (local + cloud) tailored for AI-native platforms and distributed pentesting pipelines.
+
+## 🌟 Features
+
+- **Hybrid GPU Scaling**: Routes jobs between local and cloud clusters based on availability and priority.
+- **Ray-Based Compute**: Leverages [Ray](https://ray.io) for seamless distributed Python execution.
+- **K8s & GPU Ready**: Includes manifests for NVIDIA Device Plugin and GPU-aware worker deployments.
+- **Secure by Default**: Example security contexts and isolated runtime configurations.
+- **Smart Control Plane**: FastAPI-based API with Redis job tracking and status monitoring.
+
+## 🏗️ Repository Structure
+
+```bash
+infra/
+  terraform/cloud/    # AWS/Cloud GPU provisioning
+  ansible/            # Node bootstrapping (Docker, NVIDIA drivers)
+  k8s/                # K8s manifests (GPU plugin, Ray cluster)
+platform/
+  api/                # FastAPI job submission API
+  scheduler/          # Smart routing logic
+runtime/
+  ray/                # AI task definitions
+agents/               # Example client implementations
+```
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 16+
-- OpenAI API key (for AI agents)
-
-### Installation
-
-1. Clone and setup:
+### 1. Provision Cloud Infrastructure
 ```bash
-cp .env.example .env
-# Edit .env with your OpenAI key
+cd infra/terraform/cloud
+terraform init
+terraform apply
 ```
 
-2. Build workspace image:
+### 2. Bootstrap Nodes (Local or Cloud)
 ```bash
-npm run build:docker
+cd infra/ansible
+ansible-playbook -i inventory.ini gpu-node.yml
 ```
 
-3. Start the platform:
+### 3. Deploy Kubernetes Cluster
 ```bash
-npm run docker:run
+kubectl apply -f infra/k8s/gpu/device-plugin.yaml
+kubectl apply -f infra/k8s/ray/head.yaml
+kubectl apply -f infra/k8s/ray/worker.yaml
 ```
 
-4. Create a workspace:
+### 4. Run the Platform
 ```bash
-curl -X POST http://localhost:3000/workspace
+# Start API (Port 8000)
+uvicorn platform.api.main:app --host 0.0.0.0
+
+# Start Scheduler
+python platform/scheduler/scheduler.py
 ```
 
-## 📋 Architecture
-
-- **Control Server** (Node.js) - Manages workspaces and orchestrates agents
-- **code-server** - Browser-based VS Code IDE
-- **Docker** - Isolated workspace containers
-- **Redis + BullMQ** - Queue-based agent system
-- **AI Agents** - Autonomous coding agents
-
-## 🛠️ Development
-
+### 5. Submit a Job
 ```bash
-# Start control server only
-npm start
-
-# Start with Docker Compose (includes Redis)
-npm run docker:run
-
-# Build Docker workspace image
-npm run build:docker
+python agents/example_agent.py
 ```
 
-## 📚 API Endpoints
+## 🔐 Security & Observability
 
-- `POST /workspace` - Create new workspace
-- `GET /workspaces` - List all workspaces  
-- `GET /workspace/:id` - Get workspace details
-- `DELETE /workspace/:id` - Stop workspace
+- **Sandboxing**: Pods are configured with restricted security contexts. Advanced isolation via gVisor is recommended for multi-tenant environments.
+- **Monitoring**: Integration with Prometheus & Grafana is supported via Ray's native exporters.
 
-## 🤖 AI Agents
+## 🤝 Contributing
 
-Coming soon:
-- **Planner Agent** - Breaks tasks into steps
-- **Coder Agent** - Writes production code
-- **Tester Agent** - Runs automated tests
-- **Debugger Agent** - Fixes errors
-- **Deployer Agent** - Ships to production
-
-## 🔧 Configuration
-
-Edit `.env` for:
-- OpenAI API key
-- Redis connection
-- Server settings
-
-## 📄 License
-
-MIT
+This is a production blueprint. Please adapt configurations (AMIs, regions, instance types) to your specific requirements before final deployment.

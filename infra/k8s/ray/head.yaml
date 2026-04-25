@@ -1,0 +1,46 @@
+# infra/k8s/ray/head.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-head
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: ray-head
+  template:
+    metadata:
+      labels:
+        component: ray-head
+    spec:
+      containers:
+      - name: ray-head
+        image: rayproject/ray:latest
+        command: ["/bin/bash", "-c", "--"]
+        args: ["ray start --head --port=6379 --dashboard-host=0.0.0.0 --block"]
+        ports:
+        - containerPort: 6379 # Redis
+        - containerPort: 8265 # Dashboard
+        - containerPort: 10001 # Client
+        resources:
+          requests:
+            cpu: 2
+            memory: 4Gi
+          limits:
+            cpu: 4
+            memory: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ray-head
+spec:
+  ports:
+  - name: redis
+    port: 6379
+  - name: dashboard
+    port: 8265
+  - name: client
+    port: 10001
+  selector:
+    component: ray-head

@@ -11,14 +11,22 @@ logger = logging.getLogger("RayWorker")
 # In production, this would be set via environment variable
 RAY_ADDRESS = os.getenv("RAY_ADDRESS", "auto")
 
-try:
-    ray.init(address=RAY_ADDRESS)
-    logger.info(f"Connected to Ray cluster at {RAY_ADDRESS}")
-except Exception as e:
-    logger.error(f"Failed to connect to Ray: {str(e)}")
-    # Fallback to local execution for testing
-    ray.init()
+def ensure_ray_initialized():
+    if ray.is_initialized():
+        return
+    try:
+        ray.init(address=RAY_ADDRESS)
+        logger.info(f"Connected to Ray cluster at {RAY_ADDRESS}")
+    except Exception as e:
+        logger.exception("Failed to connect to Ray cluster")
+        raise RuntimeError("Ray cluster initialization failed") from e
 
+`@ray.remote`(num_gpus=1)
+def run_ai_compute_task(payload):
+
+def main():
+    ensure_ray_initialized()
+    # Example usage
 @ray.remote(num_gpus=1)
 def run_ai_compute_task(payload):
     """

@@ -8,13 +8,13 @@ import random
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Scheduler")
 
-r = redis.Redis(host="redis", port=6379, decode_responses=True)
+REDIS_HOST = "redis"
+REDIS_PORT = 6379
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 from platform.scheduler.state import get_active_nodes, update_node_status
 from platform.scheduler.lifecycle import transition_job, fail_job
 from platform.scheduler.resource_manager import get_required_resources, find_best_node
-
-r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def dispatch(cluster_type, job_data, node_id):
     """
